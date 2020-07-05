@@ -34,6 +34,7 @@ Environment类把需要检查的信息集中在一起，其中符号表就是一
 InheritanceNode类： 是类结点作为继承图中结点的性质补充
 
 ClassTable： InheritanceNode的符号表，实现继承图
+
 (1)安装基础类
 (2)安装用户定义类
 (3)简单检查继承关系
