@@ -1,5 +1,3 @@
-
-
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdarg.h>
@@ -81,6 +79,8 @@ static void initialize_constants(void)
     val         = idtable.add_string("_val");
 }
 
+//functions for class Environment
+//构造函数
 Environment::Environment (ClassTableP ct,InheritanceNodeP sc):
     method_table(*(new SymbolTable<Symbol,method_class>())),
     var_table(*(new SymbolTable<Symbol,Entry>())),
@@ -104,21 +104,21 @@ Environment::Environment(SymbolTable<Symbol,method_class> mt,
     var_table.enterscope();
 }
 
+
 EnvironmentP Environment::clone_Environment(InheritanceNodeP n)
 {
-    return new Environment(method_table,var_table,class_table,n);  //?
+    return new Environment(method_table,var_table,class_table,n);
 }
 
+//错误消息打印
 ostream& Environment::semant_error(){
     return class_table->semant_error();
 }
 
-//UNDONE
 ostream& Environment::semant_error(tree_node* t){
     return class_table->semant_error(self_class->get_filename(),t);
 }
 
-//UNDONE
 InheritanceNodeP Environment::lookup_class(Symbol s){
     return class_table->probe(s);
 }
@@ -143,7 +143,6 @@ void Environment::method_exitscope(){
     method_table.exitscope();
 }
 
-
 void Environment::var_add(Symbol s,Symbol v){
     var_table.addid(s,v);
 }
@@ -164,7 +163,6 @@ void Environment::var_exitscope(){
     var_table.exitscope();
 }
 
-//UNDONE
 Symbol Environment::get_self_type(){
     return self_class->get_name();
 }
@@ -201,9 +199,15 @@ ostream& ClassTable::semant_error(){
 }
 
 
-InheritanceNode::InheritanceNode(Class_ nd,Inheritable istatus,Basicness bstatus):
-class__class((const class__class&)*nd),parentnd(NULL),children(NULL),inherit_status(istatus),
-basic_status(bstatus),reach_status(UnReachable),env(NULL){ }
+InheritanceNode::InheritanceNode(Class_ nd,
+    Inheritable istatus,Basicness bstatus):
+        class__class((const class__class&)*nd),
+        parentnd(NULL),
+        children(NULL),
+        inherit_status(istatus),
+        basic_status(bstatus),
+        reach_status(UnReachable),
+        env(NULL){ }
 
 void InheritanceNode::set_parentnd(InheritanceNodeP p){
     assert(parentnd==NULL);
@@ -216,7 +220,8 @@ InheritanceNodeP InheritanceNode::get_parentnd(){
 }
 
 
-ClassTable::ClassTable(Classes classes) : nds(NULL),semant_errors(0),error_stream(cerr)
+ClassTable::ClassTable(Classes classes) : 
+    nds(NULL),semant_errors(0),error_stream(cerr)
 {
     enterscope();
     install_basic_classes();
@@ -230,7 +235,7 @@ ClassTable::ClassTable(Classes classes) : nds(NULL),semant_errors(0),error_strea
     if(semant_debug){
         cerr<<"Checked for simple inheritance errors!"<<endl;
     }
-    if(errors()>0) return;
+    if(errors()) return;//
 
     build_inheritance_tree();
     if(semant_debug) {
@@ -244,7 +249,7 @@ ClassTable::ClassTable(Classes classes) : nds(NULL),semant_errors(0),error_strea
     if(semant_debug){
         cerr<<"Checked for cycles!"<<endl;
     }
-    if(errors()>0) return;
+    if(errors()) return;
 
     build_feature_tables();
     if(semant_debug) {
@@ -252,10 +257,11 @@ ClassTable::ClassTable(Classes classes) : nds(NULL),semant_errors(0),error_strea
     }
     check_main();
     if(semant_debug) {
-        cerr<<"Checked Main class and menthod!"<<endl;
+        cerr<<"Checked Main class and method!"<<endl;
     }
     root()->type_check_features();
 }
+
 
 void ClassTable::install_basic_classes() {
 
@@ -272,9 +278,11 @@ void ClassTable::install_basic_classes() {
     // with those variables at the end of this method to make this
     // code meaningful.
 
-    addid(No_class,new InheritanceNode(class_(No_class,No_class,nil_Features(),filename),
+    addid(No_class,
+        new InheritanceNode(class_(No_class,No_class,nil_Features(),filename),
                                         CanInherit,Basic));
-    addid(SELF_TYPE,new InheritanceNode(class_(SELF_TYPE,No_class,nil_Features(),filename),
+    addid(SELF_TYPE,
+        new InheritanceNode(class_(SELF_TYPE,No_class,nil_Features(),filename),
                                         CanInherit,Basic));
     addid(prim_slot,new InheritanceNode(class_(prim_slot,No_class,nil_Features(),filename),
                                         CanInherit,Basic));
@@ -334,7 +342,7 @@ void ClassTable::install_basic_classes() {
     //
     Class_ Bool_class =
 	class_(Bool, Object, single_Features(attr(val, prim_slot, no_expr())),filename);
-    install_class(new InheritanceNode(Bool_class,CanInherit,Basic));
+    install_class(new InheritanceNode(Bool_class,CantInherit,Basic));
     //
     // The class Str has a number of slots and operations:
     //       val                                  the length of the string
@@ -363,9 +371,13 @@ void ClassTable::install_basic_classes() {
 						      Str, 
 						      no_expr()))),
 	       filename);
-    install_class(new InheritanceNode(Str_class,CanInherit,Basic));
+    install_class(new InheritanceNode(Str_class,CantInherit,Basic));
 }
 
+//会检查出以下错误：
+//(1)重复定义基本类
+//(2)重复定义用户定义类
+//若不存在重复定义，则是合法类，加入到继承节点链表中
 void ClassTable::install_class(InheritanceNodeP nd){
     Symbol name=nd->get_name();
     if(probe(name)){
@@ -389,21 +401,31 @@ void ClassTable::install_classes(Classes cs)
     }   
 }
 
+//简单检查不正确的继承关系
+//可以检查以下错误：
+//(1)继承自未定义的父类
+//(2)继承自不可被继承的父类
+//
 void ClassTable::check_improper_inheritance(){
     for(List<InheritanceNode>* l=nds;l;l=l->tl()){
         InheritanceNodeP c=l->hd();
         Symbol parent =c->get_parent();
-        InheritanceNode* node=probe(parent);  //probe or lookup???
+        InheritanceNode* node=probe(parent);
 
         if(!node){
             semant_error(c)<<"Class "<<c->get_name()<<"inherits from an undefined class "
             <<parent<<"."<<endl;
+            continue;
         }
+        if(!node->inherit())
+            semant_error(c)<<"Class "<<c->get_name()<<" cannot inherit class "
+                <<parent<<"."<<endl;
     }
 }
 
+//建立继承树->建立父子继承关系
 void ClassTable::build_inheritance_tree(){
-    for(List<InheritanceNode>* l=nds;l;l=l->tl())  //?*
+    for(List<InheritanceNode>* l=nds;l;l=l->tl())   
         set_relations(l->hd());
 }
 
@@ -413,6 +435,8 @@ void ClassTable::set_relations(InheritanceNodeP nd){
     parent_node->add_child(nd);
 }
 
+//检查继承图中是否有环存在
+//在mark_reachable()函数执行之后
 void ClassTable::check_for_cycles(){
     for(List<InheritanceNode>* l=nds;l;l=l->tl()){
         if(!(l->hd()->reachable())){
@@ -422,8 +446,6 @@ void ClassTable::check_for_cycles(){
         }
     }
 }
-
-
 
 void InheritanceNode::add_child(InheritanceNodeP n)
 {
@@ -437,11 +459,13 @@ void InheritanceNode::mark_reachable()
         kids->hd()->mark_reachable();
 }
 
-
-
+//建立类继承节点中Environment的feature表
+//添加该类的每一个attr和method
+//遍历所有的子节点，并拷贝父节点的Environment，再进行操作
+//这样子节点就继承了父节点全部的attr和method
 void InheritanceNode::build_feature_tables()
 {
-    for(int i=features->first();features->more(i);features->next(i))
+    for(int i=features->first();features->more(i);i=features->next(i))
         features->nth(i)->add_to_table(env);
     for(List<InheritanceNode>* l=children;l;l=l->tl())
     {
@@ -455,28 +479,34 @@ void InheritanceNode::type_check_features(){
         cerr<<"Type checking class "<<name<<endl;
     }
     for(int i=features->first();features->more(i);i=features->next(i))
-        features->nth(i)->tc(env);   //???
+        features->nth(i)->tc(env);   
     for(List<InheritanceNode>* l=children;l;l=l->tl())
         l->hd()->type_check_features();
 }
 
+//初始化Environment，只用于Object类，其他类均从父类上拷贝
 void InheritanceNode::init_env(ClassTableP ct)
 {
     env=new Environment(ct,this);
 }
 
+//从根节点Object开始递归建立符号表
 void ClassTable::build_feature_tables()
 {
     root()->init_env(this);
     root()->build_feature_tables();
 }
 
+//AST以Object类作为根节点
 InheritanceNodeP ClassTable::root(){
     return probe(Object);
 }
 
 
-//built_features_table => add_to_table
+//将函数添加到method_table中
+//会检查以下错误：
+//(1)函数重定义
+//(2)继承函数的返回类型和参数列表与被继承函数不符
 void method_class::add_to_table(EnvironmentP env){
     if(env->method_probe(name)){
         env->semant_error(this)<<"Method "<<name<<" is multiply defined."<<endl;
@@ -486,21 +516,21 @@ void method_class::add_to_table(EnvironmentP env){
     if(old){
         if(old->get_return_type()!=return_type){
             env->semant_error(this)<<"In redefined method "<<name
-            << name <<",is different from original return type "<<
+            << ", return type " <<return_type<<" is different from original return type "<<
             old->get_return_type()<<"."<<endl;
             return ;
         }
         if(old->num_formals()!=num_formals()){
-            env->semant_error(this)<<"Incompatible number of formal parameters in defined method "
+            env->semant_error(this)<<"Incompatible number of formal parameters in redefined method "
             <<name <<"."<<endl;
             return ;
         }
         Formals old_formals = old->get_formals();
-        for(int i=formals->first();formals->more(i);formals->next(i)){
+        for(int i=formals->first();formals->more(i);i=formals->next(i)){
             if(old_formals->nth(i)->get_type_decl()!=formals->nth(i)->get_type_decl())
             {
                 env->semant_error(this)<<"In redefined method "<<name << ",parameter type "
-                <<formals->nth(i)->get_type_decl()<<"is different from original type"<<
+                <<formals->nth(i)->get_type_decl()<<" is different from original type "<<
                 old_formals->nth(i)->get_type_decl()<<endl;
                 return ;
             }
@@ -509,8 +539,13 @@ void method_class::add_to_table(EnvironmentP env){
     env->method_add(name,this);
 }
 
+//将变量添加到var_table
+//会检查以下错误：
+//(1)attribute的名字不能是self
+//(2)在父类或自身类中重复定义
+//
 void attr_class::add_to_table(EnvironmentP env){
-    if (name ==self ){
+    if (name == self ){
         env->semant_error(this)<<"'self' cannot be the name of an attribute"<<endl;
         return ;
     }
@@ -525,12 +560,14 @@ void attr_class::add_to_table(EnvironmentP env){
     env->var_add(name,type_decl);
 }
 
+//Cool程序必须要有main类,main类中必须有main函数
 void ClassTable::check_main(){
     InheritanceNodeP mainclass=probe(Main);
-    if(!mainclass) semant_error()<<"Class Main is not defined."<<endl;
+    if(!mainclass) semant_error()<< "Class Main is not defined."<<endl;
     else mainclass->check_main_method();
 }
 
+//main类中必须要有main函数，并且不应该有参数
 void InheritanceNode::check_main_method()
 {
     if(!env->method_probe(main_meth)){
@@ -542,11 +579,12 @@ void InheritanceNode::check_main_method()
     }
 }
 
+//根据规则，判断subtype是否是supertype的子类
 int Environment::type_leq(Symbol subtype,Symbol supertype){
     if(!(lookup_class(supertype)&&lookup_class(subtype))){
         return TRUE;
     }
-    if(subtype==SELF_TYPE&&supertype==SELF_TYPE){
+    if(subtype==SELF_TYPE && supertype==SELF_TYPE){
         return TRUE;
     }
     if(supertype==SELF_TYPE) return FALSE;
@@ -561,6 +599,7 @@ int Environment::type_leq(Symbol subtype,Symbol supertype){
     return FALSE;
 }
 
+//找到两个type的公共父类
 Symbol Environment::type_lub(Symbol type1 , Symbol type2){
     if(!lookup_class(type1)) return type2;
     if(!lookup_class(type2)) return type1;
@@ -573,10 +612,10 @@ Symbol Environment::type_lub(Symbol type1 , Symbol type2){
     return nd->get_name();
 }
 
-
+//按照规则对不同类型进行类型检查
 void attr_class::tc(EnvironmentP env){
     if(!env->lookup_class(type_decl))
-        env->semant_error(this)<<"Class "<<type_decl<<"if attribute "<<name
+        env->semant_error(this)<<"Class "<<type_decl<<" of attribute "<<name
         << "is undefined."<<endl;
     if(!env->type_leq(init->tc(env),type_decl)){
         env->semant_error(this)<<"Inferred type "<<init->get_type()<<" of initialization of attribute "
@@ -587,15 +626,15 @@ void attr_class::tc(EnvironmentP env){
 void method_class::tc(EnvironmentP env)
 {
     env->var_enterscope();
-    for(int i=formals->first();formals->more(i);formals->next(i))
+    for(int i=formals->first();formals->more(i);i=formals->next(i))
         formals->nth(i)->install_formal(env);
     if(!env->lookup_class(return_type)){
         env->semant_error(this)<<"undefined return type "<<return_type<<" in method "<<name<<"."<<endl;
     }
     if(!env->type_leq(expr->tc(env),return_type))
-        env->semant_error(this)<<"Inferred return type "<<return_type
+        env->semant_error(this)<<"Inferred return type "<<expr->get_type()<<" of method "<<name
         <<" does not comform to declared return type "<<return_type<<"."<<endl;
-    env->var_exitscope();   //?
+    env->var_exitscope();   
 }
 
 void formal_class::install_formal(EnvironmentP env){
@@ -768,7 +807,7 @@ Symbol let_class::tc(EnvironmentP env){
     else 
         env->var_add(identifier,type_decl);
     type = body->tc(env);
-    env->var_exitscope();   //??
+    env->var_exitscope();   
     return type;
 }
 
@@ -819,7 +858,7 @@ Symbol dispatch_class::tc(EnvironmentP env){
     }
     else
     {
-        for(int i=actual->first();actual->more(i);actual->next(i)){
+        for(int i=actual->first();actual->more(i);i=actual->next(i)){
             if(!env->type_leq(actual->nth(i)->get_type(),meth->sel_formal(i)->get_type_decl()))
                 env->semant_error(this)<<"In call of method "<<name<<",type "<<actual->nth(i)->get_type()
                     <<"of parameter "<<meth->sel_formal(i)->get_name()<<"does not conform to declared type "
@@ -865,7 +904,7 @@ Symbol static_dispatch_class::tc(EnvironmentP env){
     else 
         for(int i=actual->first();actual->more(i);i=actual->next(i))
             if(!env->type_leq(actual->nth(i)->get_type(),meth->sel_formal(i)->get_type_decl()))
-                env->semant_error(this)<<"In call of method "<<name <<" type "<<actual->nth(i)->get_type()
+                env->semant_error(this)<<"In call of method "<<name <<" , type "<<actual->nth(i)->get_type()
                     <<"of parameter "<<meth->sel_formal(i)->get_name()<<
                         " does not conform to declared type "<<meth->sel_formal(i)->get_type_decl()
                             <<"."<<endl;
@@ -895,7 +934,7 @@ Symbol typcase_class::tc(EnvironmentP env)
     type = No_type;
     expr->tc(env);
 
-    for (int i=cases->first();cases->more(i);cases->next(i))
+    for (int i=cases->first();cases->more(i);i=cases->next(i))
     {
         Case c=cases->nth(i);
         for(int j=cases->first();j<i;j=cases->next(j))
@@ -917,7 +956,7 @@ Symbol typcase_class::tc(EnvironmentP env)
                 " declared with type SELF_TYPE in case branch."<<endl;
         env->var_add(c->get_name(),c->get_type_decl());
         type=env->type_lub(type,c->tc(env));
-        env->method_exitscope();
+        env->var_exitscope();
     }
     return type;
 }
@@ -949,6 +988,5 @@ InheritanceNodeP program_class::semant()
 	cerr << "Compilation halted due to static semantic errors." << endl;
 	exit(1);
     }
+    return classtable->root();
 }
-
-

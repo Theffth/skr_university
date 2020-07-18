@@ -205,7 +205,7 @@
     {
         $$=single_Features($1);
     }
-    |  feature ';' no_empty_feature_list   //?
+    |  feature ';' no_empty_feature_list   
     {
         $$=append_Features(single_Features($1),$3);
     }
