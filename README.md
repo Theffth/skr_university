@@ -38,10 +38,10 @@
         目前进度：完成Data Lab,Bomb Lab,Attack Lab,Cache Lab的Part A和Shell Lab
     </p>
     <p>
-        项目实现：
+        项目实现：https://github.com/Theffth/skr_university/tree/master/csapp%20lab
     </p>
     <p>
-        总结笔记：
+        总结笔记：https://github.com/Theffth/skr_university/blob/master/csapp%20lab/CSAPP%20LAB.md
     </p>
 </details>
 

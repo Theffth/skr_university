@@ -695,9 +695,9 @@ Usage: ./csim-ref [-hv] -s <s> -E <E> -b <b> -t <tracefile>
 
 -  -h: Optional help flag that prints usage info 
 -  -v: Optional verbose flag that displays trace info 
--  -s <s>: 组的索引位数 (S = 2^s 是组数) 
--  -E <E>: 关联性（每组行数）
--  -b <b>: 块的位数 (B = 2^b 是块的大小) 
+-  -s \<s>:  组的索引位数 (S = 2^s 是组数) 
+-  -E \<E>:  关联性（每组行数）
+-  -b \<b>:  块的位数 (B = 2^b 是块的大小) 
 -  -t : Name of the valgrind trace to replay
 
 我们需要完善csim.c文件，使它在相同的命令行参数下产生与参考cache模拟器相同的输出。 该文件几乎完全为空，需要我们从头开始编写。
@@ -986,8 +986,8 @@ Unix shell支持作业控制的概念，该概念允许用户在后台和前台�
 - tsh应该支持以下内置命令：
   - quit命令终止shell
   - jobs命令列出所有的后台作业
-  - bg <job>命令通过向其发送SIGCONT信号来重新启动<job>，然后在后台运行它。 <job>参数可以是PID或JID
-  - fg <job>命令通过向其发送SIGCONT信号来重新启动<job>，然后在前台运行它。 <job>参数可以是PID或JID
+  - bg \<job>命令通过向其发送SIGCONT信号来重新启动\<job>，然后在后台运行它。 \<job>参数可以是PID或JID
+  - fg \<job>命令通过向其发送SIGCONT信号来重新启动\<job>，然后在前台运行它。 \<job>参数可以是PID或JID
 - tsh应该收回其所有僵尸子进程， 如果任何作业由于接收到未捕获到的信号而终止，则tsh应该识别此事件并打印一条消息，其中包含该作业的PID和有问题的信号的描述
 
 ### check your work
