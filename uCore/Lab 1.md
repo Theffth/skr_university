@@ -1,62 +1,236 @@
-# Ucore LAB（一）
+# Lab 1
 
-本实验主要是根据清华大学的ucore课程设计学习操作系统的内容。
+## 理论部分
 
-## Lab 0
+## Chapter2 启动、中断、异常和系统调用
 
-### 准备知识
+### BIOS
 
-#### Intel 80386运行模式
+#### 启动时计算机内存和磁盘布局
 
-80386有四种运行模式，实模式、保护模式、SMM模式和虚拟8086模式
+![1596698209354](imgs/ucore1.png)
 
-80386加电启动后处于实模式运行状态，实模式的存在是为了intel x86的向下兼容需求。实模式把整个物理内存看作是分段的区域，程序代码和数据位于不同的区域，操作系统和用户程序没有区别对待。
+#### 加载程序的内存地址空间
 
-80386工作在保护模式时，32根地址线都可供寻址，物理寻址空间高达4GB。保护模式支持内存分页机制，提供对虚拟内存的良好支持。支持多任务、优先级机制，不同的程序可以运行在不同的特权级上。
+![1596698297564](imgs/ucore2.png)
 
-#### Intel 80386内存架构
+磁盘上有各种各样的文件系统，无法在BIOS中包含所有的文件系统格式，为了增加文件系统的灵活性，BIOS先将加载程序从磁盘的引导扇区加载到内存，在加载程序中识别磁盘上的文件系统，然后再读内核镜像并加载到内存，最后把控制权交给操作系统内核代码。
 
-内存处理机制：
+#### BIOS系统调用
 
-- 段机制：对内存单元的安全保护和隔离
-- 页机制：有效支持大量应用程序分散使用大内存
+BIOS以中断调用的方式提供了基本的I/O功能：
 
-三个地址空间：
+INT 10h：字符显示
 
-- 物理地址空间：处理器提交到总线上、用于访问计算机系统中内存和外设的最终地址
-- 线性地址空间：80386处理器通过段机制控制下形成的地址空间，实现多个运行的应用程序之间相互隔离、保护地址空间
-  - 在操作系统的管理下，每个运行的应用程序有相对独立的一个或多个内存空间段
-  - 每个段有各自的起始地址和长度属性，大小不固定
-- 逻辑地址空间：面向程序员的地址（虚拟地址）
+INT 13h：磁盘扇区读写
 
-三者关系：
+INT 15h：检测内存大小
 
-- 分段机制启动、分页机制未启动：逻辑地址--->**段机制处理**--->线性地址=物理地址
-- 分段机制和分页机制都启动：逻辑地址--->**段机制处理**--->线性地址--->**页机制处理**--->物理地址
+INT 16h：键盘输入
 
-### 具体操作
+限制：只能在X86的实模式下工作
 
-本实验我选择的环境是在Win上通过VMware虚拟机使用Linux Ubuntu 16.04实验环境，首先下载相应的lab：
+### 系统启动流程
 
-```
-git clone https://github.com/kiukotsu/ucore
-```
+#### 计算机启动流程
 
-随后安装qemu：
+![1596699335907](imgs/ucore3.png)
 
-```
-sudo apt-get install qemu-system
-```
+#### CPU初始化
 
-## Lab 1
+CPU加电稳定后从0xFFFF0读第一条指令
 
-### 实验目的
+- CS:IP=0xF0000:FFFF0
+- 第一条指令是跳转指令
+
+CPU初始状态是16位实模式，于是：
+
+- CS:IP是16位寄存器
+- 指令指针PC=16*CS+IP
+- 最大地址空间是1MB
+
+#### BIOS初始化
+
+- 硬件自检POST
+- 检测系统中内存和显卡等关键部件的存在和工作状态
+- 查找并执行显卡等接口卡BIOS，进行设备初始化
+- 执行系统BIOS，进行系统检测
+  - 检测和配置系统中安装的即插即用设备
+- 更新CMOS中的扩展系统配置数据ESCD
+- 按指定启动顺序从软盘、硬盘或者光驱启动
+
+#### 主引导记录MBR格式
+
+![1596708934335](imgs/ucore4.png)
+
+启动代码：446字节
+
+- 检查分区表正确性
+- 加载并跳转到磁盘上的引导程序
+
+硬盘分区表：64字节
+
+- 描述分区状态和位置
+- 每个分区描述信息占据16字节
+
+结束标志字：2字节（0x55AA)
+
+- 主引导记录的有效标志
+
+#### 分区引导扇区格式
+
+跳转指令：跳转到启动代码（与平台相关）
+
+文件卷头：文件系统描述信息
+
+启动代码：跳转到加载程序
+
+结束标志：55AA
+
+#### 加载程序（bootloader)
+
+加载程序：从文件系统中读取启动配置信息
+
+启动菜单：可选的操作系统内核列表和加载参数
+
+操作系统内核：依据配置加载指定内核并跳转到内核执行
+
+#### 系统启动规范
+
+BIOS
+
+- 固化到计算机主板上的程序
+- 包括系统设置、自检程序和系统自启动程序
+- BOIS-MBR（主引导记录）、BIOS-GPT（全局唯一标识分区表，解决多于四个分区的情况）、PXE（从网络启动）
+
+UEFI
+
+- 接口标准
+- 在所有平台上一致的操作系统启动服务
+- ==>安全性问题
+
+### 中断、异常和系统调用
+
+#### 内核的进入与退出
+
+内核与外界打交道的途径如下：
+
+![1596710590945](imgs/ucore44.png)
+
+- 系统调用：应用程序主动向操作系统发出服务请求
+- 异常：非法指令或者其他原因导致当前指令执行失败后的处理请求
+- 中断：来自硬件设备的处理请求
+
+#### 中断、异常和系统调用的比较
+
+##### 源头
+
+中断：外设
+
+异常：应用程序意想不到的行为
+
+系统调用：应用程序请求操作提供服务
+
+##### 响应方式
+
+中断：异步
+
+异常：同步
+
+系统调用：异步或者同步
+
+##### 处理机制
+
+中断：持续，对用户应用程序是透明的
+
+异常：杀死或者重新执行意想不到的应用程序指令
+
+系统调用：等待和持续
+
+#### 中断处理机制
+
+硬件处理：
+
+- 在CPU初始化时设置中断使能标志
+  - 依据内部或者外部事件**设置中断标志**
+  - 依据中断向量**调用相应中断服务例程**
+
+软件：
+
+- 现场保存（编译器）
+- 中断服务例程（服务例程）
+- 清除中断标记（服务例程）
+- 现场恢复（编译器）
+
+#### 中断嵌套
+
+硬件中断服务例程可以被打断：
+
+- 不同硬件中断源可能会在硬件中断处理时出现
+- 硬件中断服务例程需要临时禁止中断请求
+- 中断请求会保持到CPU做出响应
+
+异常服务例程可被打断：
+
+- 异常服务例程执行时可能出现硬件中断
+
+异常服务例程可嵌套：
+
+- 异常服务例程可能出现缺页
+
+#### 系统调用
+
+系统调用使用INT 和 IRET 指令，用于堆栈切换和特权级的转换
+
+函数调用使用CALL和RET指令，没有堆栈切换
+
+##### 开销
+
+系统调用比函数调用的开销大：
+
+- 引导机制
+- 建立内核堆栈
+- 验证参数
+- 内核态映射到用户态的地址空间：更新页面映射权限
+- 内核态独立地址空间：TLB
+
+系统调用的实现：
+
+![1597048610232](imgs/ucore12.png)
+
+#### 课后错题
+
+下列选项中，会导致用户进程从用户态切换到内核态的操作是（ ） 
+
+1）整数除以0        2）sin()函数调用             3）read系统调用
+
+答案：1、3
+
+中断处理和子程序调用都需要压栈以保护现场。中断处理一定会保存而子程序调用不需要保存其内容的是（ ）
+
+A. 程序计数器
+
+B. 程序状态字寄存器 
+
+C. 通用数据寄存器
+
+D. 通用地址寄存器
+
+答案：B
+
+补充： 程序状态寄存器PSW是计算机系统的核心部件——运算器的一部分，PSW用来存放两类信息：一类是体现当前指令执行结果的各种状态信息，如有无进位（CY位），有无溢出（OV位），结果正负（SF位），结果是否为零（ZF位），奇偶标志位（P位）等；另一类是存放控制信息，如允许中断(IF位)，跟踪标志（TF位）等。
+
+## 实验部分
+
+### Lab 1
+
+#### 实验目的
 
 完成一个能够切换到X86保护模式并显示字符的bootloader，为启动操作系统ucore做准备。
 
 lab1中包含一个bootloader和一个OS，其中bootloader：切换到X86保护模式、读磁盘并加载ELF执行文件格式、显示字符；OS：处理时钟中断、显示字符
 
-### 练习1
+#### 练习1
 
 问题：
 
@@ -237,7 +411,7 @@ main(int argc, char *argv[]) {
 
 可以看到读取输入文件（小于等于510字节），随后将第511和512字节设置为0x55AA。
 
-### 练习2
+#### 练习2
 
 问题：                                                                                                                          
 
@@ -281,23 +455,23 @@ x /2i $pc
 
 可以看到第一条是跳转指令：
 
-![1596791441723](./imgs/ucore6.png)
+![1596791441723](imgs/ucore6.png)
 
 接着执行BIOS代码，将加载程序从磁盘的引导扇区加载到0x7c00，在初始化位置0x7c00设置实地址断点,测试断点正常：
 
-![1596790966592](./imgs/ucre5.png)
+![1596790966592](imgs/ucre5.png)
 
 从0x7c00开始跟踪代码运行，将单步跟踪反汇编得到的代码与bootasm.S和 bootblock.asm进行比较：
 
-![1596807913268](./imgs/ucore7.png)
+![1596807913268](imgs/ucore7.png)
 
 可以看到从0x7c00开始执行的代码与bootasm.S和bootblock.asm中的汇编代码相同：
 
-![1596808000691](./imgs/ucore8.png)
+![1596808000691](imgs/ucore8.png)
 
-![1596808149256](./imgs/ucore9.png)
+![1596808149256](imgs/ucore9.png)
 
-### 练习3
+#### 练习3
 
 实验内容：分析bootloader进入保护模式的过程
 
@@ -331,11 +505,11 @@ start:
 
 - 等待8042 Input buffer为空；    
 
-<img src="D:\天问\Week12-\ucore10.png" alt="1597033701320" style="zoom:50%;" />
+<img src="imgs/ucore10.png" alt="1597033701320"  />
 
 - 发送Write 8042 Output Port （P2）命令到8042 Input buffer；
 
-![1597033753068](D:\天问\Week12-\ucore11.png)
+![1597033753068](imgs/ucore11.png)
 
 - 等待8042 Input buffer为空；
 - 将8042 Output Port（P2）得到字节的第2位置1，然后写入8042 Input buffer
@@ -448,7 +622,7 @@ spin:
     jmp spin
 ```
 
-### 练习4
+#### 练习4
 
 分析bootloader加载ELF格式的OS的过程
 
@@ -501,11 +675,11 @@ readsect(void *dst, uint32_t secno) {
 
 kernel文件格式信息如下：
 
-![1597143544062](./imgs/ucore13.png)
+![1597143544062](imgs/ucore13.png)
 
 程序头信息如下:
 
-![1597144000847](./imgs/ucore14.png)
+![1597144000847](imgs/ucore14.png)
 
 具体代码如下：
 
@@ -542,7 +716,7 @@ bad:
 }
 ```
 
-### 练习5
+#### 练习5
 
 实现函数调用堆栈跟踪函数
 
@@ -580,15 +754,15 @@ print_stackframe(void) {
 
 运行结果：
 
-![1597303513104](./imgs/ucore21.png)
+![1597303513104](imgs/ucore21.png)
 
 最后一行数值的含义：
 
 由于BIOS加载bootloader代码到0x7c00地址处，所以0x7c00-开始为代码段，0x7c00-0为栈空间，一开始执行0x7c00处代码，没有参数，所以追踪到最后一个看到ebp的地址为0x7bf8（=0x7c00-8），参数为0x7c00地址开始的代码段的内容，也即0xc031fcfa...：
 
-![1597305322007](./imgs/ucore22.png)
+![1597305322007](imgs/ucore22.png)
 
-### 练习6
+#### 练习6
 
 完善中断初始化和处理 （需要编程） 
 
@@ -598,7 +772,7 @@ print_stackframe(void) {
 
 中断描述符结构如下：
 
-![1597332596679](./imgs/ucore23.png)
+![1597332596679](imgs/ucore23.png)
 
 中断描述符表中一个表项占8字节，其中SELECTOR作为段选择子，段选择子从GDT中取得相应的段描述符，段描述符里保存了中断服务例程的段基址和属性信息，将段基址与中断描述符中的OFFSET偏移量相加即得到中断处理代码的入口地址。 
 
@@ -656,7 +830,7 @@ idt_init(void) {
 
 首先声明__vectors数组，其数值由tools/vectors.c工具生成，具体在vector.S文件中：
 
-![1597337373840](./imgs/ucore24.png)
+![1597337373840](imgs/ucore24.png)
 
 数组存储了中断入口地址中的偏移量部分，随后利用mmu.h文件中SETGATE函数来初始化idt表中的每一项，首先全部初始化为interrupt-gate描述符，则idt目标项地址为idt[i]，istrap=0，处理例程在内核态，代码段选择子为内核代码段，dpl为0；随后再设置trap-gate，最后使用lidt指令把idt的起始地址加载到IDTR寄存器中。
 
@@ -679,365 +853,8 @@ idt_init(void) {
      //......
 ```
 
-### 扩展练习
+#### 扩展练习
 
-### 总结
+#### 总结
 
 通过lab1，我主要学习到了ucore项目的文件组成，镜像的生成过程。CPU加电后，到固定地址0xffff0处执行BIOS代码，BIOS加载bootloader代码到0x7c00地址处，bootloader加载程序首先进入保护模式，随后加载ELF格式的OS代码，也就是/bin/kernel文件。
-
-## Lab 2
-
-### 实验内容 
-
-- 发现系统中的物理内存
-- 建立对物理内存的初步管理（连续物理内存管理）
-- 页表相关的操作，即建立页表来实现虚拟内存到物理内存之间的映射
-
-### 准备知识
-
-#### x86特权级
-
-ucore和Linux只使用 ring 0 和 ring 3，其中ring 0是内核态特权级，ring 2是用户态特权级
-
-CPU检查特权级的情况：
-
-- 访问数据段
-- 访问页表
-- 进入中断服务例程
-
-检查过程：
-
-段选择子（位于段寄存器中）：
-
-![1597496683218](./imgs/ucore32.png)
-
-段描述符：
-
-![1597496854175](./imgs/ucore33.png)
-
-其中，
-
-RPL：处于数据段，段寄存器DS，ES，FS，GS
-
-CPL：处于代码段，段寄存器CS，SS
-
-DPL：段/门描述符
-
-执行一条指令，需要访问数据段时，当前特权级是CPL，需要访问的数据段的特权级是RPL
-
-访问门（中断/陷入/异常）时：检查CPL ≤ DPL[门] & CPL ≥ DPL[段]
-
-访问段时：MAX（CPL，RPL） ≤ DPL[段]
-
-#### 通过中断切换特权级
-
-从内核态转换到用户态：通过构造特殊的栈结合IRET指令
-
-![1597507229183](./imgs/ucore34.png)
-
-从用户态转换到内核态：通过修改内核态的栈，使IRET指令执行后仍然在内核态
-
-![1597507655316](./imgs/ucore35.png)
-
-特权级转换时，不同特权级的堆栈信息保存在TSS段中：
-
-![1597508375164](./imgs/ucore36.png)
-
-TSS段保存在内存中，通过Task Register特殊寄存器和全局描述符表GDT访问得到：
-
-![1597508633938](./imgs/ucore37.png)
-
-#### 段/页表
-
-段机制概述：首先根据段寄存器中的段选择子部分到GDT中寻找对应的段描述符，最后对应到线性地址（物理地址，没有页机制时）
-
-![1597551324212](./imgs/ucore38.png)
-
-GDT表存放在内存中，访问效率低，因此，段选择子的隐藏部分中存放了Base Address部分，隐藏部分是由硬件控制的：
-
-![1597551735220](./imgs/ucore39.png)
-
-基址一直被存放在隐藏部分，直到选择子发生变化，才会更新基址内容。
-
-#### Ucore建立段/页表
-
-二级页表机制，首先建立页目录表、页表，页目录表的起始地址存放在CR3寄存器中：
-
-![1597555074071](./imgs/ucore41.png)
-
-页目录表项：
-
-![1597556169171](./imgs/ucore40.png)
-
-页表项：
-
-![1597556212982](./imgs/ucore42.png)
-
-使能页机制：OS需要把CR0寄存器中的bit 31(PG)置为1
-
-合并段机制和页机制：
-
-![1597560752504](./imgs/ucore43.png)
-
-### 练习1
-
-实现 first-fit 连续物理内存分配算法（需要编程） 
-
-实验要求：在实现first fit 内存分配算法的回收函数时，要考虑地址连续的空闲块之间的合并操作。提示：在建立空闲页块链表时，需要**按照空闲页块起始地址来排序**，形成一个有序的链表。**可能会修改default_pmm.c中的default_init，default_init_memmap，default_alloc_pages，default_free_pages等相关函数。**请仔细查看和理解default_pmm.c中的注释。 
-
-first-fit连续物理内存分配算法以Page结构体为单位，其中空闲块链表按照起始地址排序，分配内存时，依次遍历空闲块，如果当前空闲块的大小大于等于所需大小，则分配该块内存，若有剩余内存部分，则插入原位置；释放内存时，依次遍历空闲块，若存在物理相邻的内存块，则合并，否则按照起始地址顺序插入适当的位置。
-
-具体代码如下：
-
-default_init()函数：（无改动）
-
-初始化free_area结构体，free_list是链接Page中page_link部分的双向循环链表，nr_free是空闲内存块的总数。
-
-```C
-/*
- * (2) default_init: you can reuse the  demo default_init fun to init the free_list and set nr_free to 0.
- *              free_list is used to record the free mem blocks. nr_free is the total number for free mem blocks.
- */
-static void
-default_init(void) {
-    list_init(&free_list);
-    nr_free = 0;
-}
-```
-
-default_init_memmap()函数：（无改动）
-
-用具体的空闲页块的起始地址和空闲页块数初始化空闲块，首先需要初始化所有的空闲页块，也就是Page结构体的内容：
-
-```C
-/* *
- * struct Page - Page descriptor structures. Each Page describes one
- * physical page. In kern/mm/pmm.h, you can find lots of useful functions
- * that convert Page to other data types, such as phyical address.
- * */
-struct Page {
-    int ref;                        // page frame's reference counter
-    uint32_t flags;                 // array of flags that describe the status of the page frame
-    unsigned int property;          // the num of free block, used in first fit pm manager
-    list_entry_t page_link;         // free list link
-};
-```
-
-包括引用计数ref，页帧状态flags，只有连续页块中第一页的Page结构体中的property被设置为空闲页块数，之后页结构体中的property设置为0，page_link是Page结构中作为链表节点的部分。随后设置free_area结构体的内容，把当前空闲连续内存插入链表：
-
-```C
-/*
- * (3) default_init_memmap:   
- *              This fun is used to init a free block (with parameter: addr_base, page_number).
- *              First you should init each page (in memlayout.h) in this free block, include:
- *                  p->flags should be set bit PG_property (means this page is valid. In pmm_init fun (in pmm.c),
- *                  the bit PG_reserved is setted in p->flags)
- *                  if this page  is free and is not the first page of free block, p->property should be set to 0.
- *                  if this page  is free and is the first page of free block, p->property should be set to total num of block.
- *                  p->ref should be 0, because now p is free and no reference.
- *                  We can use p->page_link to link this page to free_list, (such as: list_add_before(&free_list, &(p->page_link)); )
- *              Finally, we should sum the number of free mem block: nr_free+=n
- */
-static void
-default_init_memmap(struct Page *base, size_t n) {
-    assert(n > 0);
-    struct Page *p = base;
-    for (; p != base + n; p ++) {
-        assert(PageReserved(p));
-        p->flags = p->property = 0;
-        set_page_ref(p, 0);
-    }
-    base->property = n;
-    SetPageProperty(base);
-    nr_free += n;
-    list_add(&free_list, &(base->page_link));
-}
-```
-
-default_alloc_pages()函数：（修改了//处内容）
-
-分配连续空闲内存，遍历空闲块链表找到一块内存大小≥所需内存，若大小相同，则直接分配；若空闲块的内存大小大于所需内存，则先插入分配后剩余的续内存块，再把原先分配的内存块从空闲块链表中删除：
-
-```C
-/*
- * (4) default_alloc_pages: search find a first free block (block size >=n) in free list and resize the free block, return the addr
- *              of malloced block.
- *              (4.1) So you should search freelist like this:
- *                       list_entry_t le = &free_list;
- *                       while((le=list_next(le)) != &free_list) {
- *                       ....
- *                 (4.1.1) In while loop, get the struct page and check the p->property (record the num of free block) >=n?
- *                       struct Page *p = le2page(le, page_link);
- *                       if(p->property >= n){ ...
- *                 (4.1.2) If we find this p, then it' means we find a free block(block size >=n), and the first n pages can be malloced.
- *                     Some flag bits of this page should be setted: PG_reserved =1, PG_property =0
- *                     unlink the pages from free_list
- *                     (4.1.2.1) If (p->property >n), we should re-caluclate number of the the rest of this free block,
- *                           (such as: le2page(le,page_link))->property = p->property - n;)
- *                 (4.1.3)  re-caluclate nr_free (number of the the rest of all free block)
- *                 (4.1.4)  return p
- *               (4.2) If we can not find a free block (block size >=n), then return NULL
- */
-static struct Page *
-default_alloc_pages(size_t n) {
-    assert(n > 0);
-    if (n > nr_free) {
-        return NULL;
-    }
-    struct Page *page = NULL;
-    list_entry_t *le = &free_list;
-    while ((le = list_next(le)) != &free_list) {
-        struct Page *p = le2page(le, page_link);
-        if (p->property >= n) {
-            page = p;
-            break;
-        }
-    }
-    if (page != NULL) {
-        if (page->property > n) {
-            struct Page *p = page + n;
-            p->property = page->property - n;
-            //modified
-            list_add_after(&(page->page_link), &(p->page_link));
-    }
-        //modified
-        list_del(&(page->page_link));
-        nr_free -= n;
-        ClearPageProperty(page);
-    }
-    return page;
-}
-```
-
-default_free_pages()函数：（修改了//处内容）
-
-把已释放的内存块按起始地址的大小顺序插入空闲块链表，首先设置内存块为已释放的空闲状态，随后遍历空闲块链表，直到找到物理相邻的连续空闲内存并合并或者找到比当前连续空闲内存块尾指针大的连续空闲块并插入：
-
-```C
-/*
- * (5) default_free_pages: relink the pages into                                                                                                                                                                 free list, maybe merge small free blocks into big free blocks.
- *               (5.1) according the base addr of withdrawed blocks, search free list, find the correct position
- *                     (from low to high addr), and insert the pages. (may use list_next, le2page, list_add_before)
- *               (5.2) reset the fields of pages, such as p->ref, p->flags (PageProperty)
- *               (5.3) try to merge low addr or high addr blocks. Notice: should change some pages's p->property correctly.
- */
-static void
-default_free_pages(struct Page *base, size_t n) {
-    assert(n > 0);
-    struct Page *p = base;
-    for (; p != base + n; p ++) {
-        assert(!PageReserved(p) && !PageProperty(p));
-        p->flags = 0;
-        set_page_ref(p, 0);
-    }
-    base->property = n;
-    SetPageProperty(base);
-    list_entry_t *le = list_next(&free_list);
-    while (le != &free_list) {
-        p = le2page(le, page_link);
-        le = list_next(le);
-        if (base + base->property == p) {
-            base->property += p->property;
-            ClearPageProperty(p);
-            list_del(&(p->page_link));
-        }
-        else if (p + p->property == base) {
-            p->property += base->property;
-            ClearPageProperty(base);
-            base = p;
-            list_del(&(p->page_link));
-        }
-        //modified
-        else if (p > base + base -> property) {
-            le=list_prev(le);
-            break;
-        }
-    }
-    //modified
-    list_add_before(le,&(base->page_link));
-    nr_free += n; 
-}
-```
-
-### 练习2
-
-实现寻找虚拟地址对应的页表项 （需要编程）
-
-通过设置页表和对应的页表项，可建立虚拟内存地址和物理内存地址的对应关系。其中的get_pte函数是设置页表项环节中的一个重要步骤。此函数找到一个虚地址对应的二级页表项的内核虚地址，如果此二级页表项不存在，则分配一个包含此项的二级页表。本练习需要补全get_pte函数 in kern/mm/pmm.c，实现其功能。 
-
-重点参考：“ 建立虚拟页和物理页帧的地址映射关系 ”一节
-
-这个实验中需要注意在memset函数和用指针进行引用的操作对象必须是虚拟地址（逻辑地址），所以我们需要提前把物理地址转换为对应的虚拟地址再使用。根据pmm.c文件中的注释，主要思路是首先根据逻辑地址的首10bit找到对应的页目录表项，判断页目录表项的Present位，也即对应的二级页表是否存在，若不存在则根据参数create判断是否需要我们分配对应二级页表的物理页面，若不需要则直接返回NULL，若需要则先分配物理页面page，并设置权限，最后返回页目录表（一级页表）项中对应的二级页表项的地址，即要求中的内核虚地址。
-
-具体代码如下：
-
-```C
-//get_pte - get pte and return the kernel virtual address of this pte for la
-//        - if the PT contians this pte didn't exist, alloc a page for PT
-// parameter:
-//  pgdir:  the kernel virtual base address of PDT
-//  la:     the linear address need to map
-//  create: a logical value to decide if alloc a page for PT
-// return value: the kernel virtual address of this pte
-pte_t *
-get_pte(pde_t *pgdir, uintptr_t la, bool create) {
-    /* LAB2 EXERCISE 2: YOUR CODE
-     *
-     * If you need to visit a physical address, please use KADDR()
-     * please read pmm.h for useful macros
-     *
-     * Maybe you want help comment, BELOW comments can help you finish the code
-     *
-     * Some Useful MACROs and DEFINEs, you can use them in below implementation.
-     * MACROs or Functions:
-     *   PDX(la) = the index of page directory entry of VIRTUAL ADDRESS la.
-     *   KADDR(pa) : takes a physical address and returns the corresponding kernel virtual address.
-     *   set_page_ref(page,1) : means the page be referenced by one time
-     *   page2pa(page): get the physical address of memory which this (struct Page *) page  manages
-     *   struct Page * alloc_page() : allocation a page
-     *   memset(void *s, char c, size_t n) : sets the first n bytes of the memory area pointed by s
-     *                                       to the specified value c.
-     * DEFINEs:
-     *   PTE_P           0x001                   // page table/directory entry flags bit : Present
-     *   PTE_W           0x002                   // page table/directory entry flags bit : Writeable
-     *   PTE_U           0x004                   // page table/directory entry flags bit : User can access
-     */
-    // (1) find page directory entry
-    // pgdir:  the kernel virtual base address of PDT
-    // PDX(la) = the index of page directory entry of VIRTUAL ADDRESS la.
-    pde_t* pdep = &pgdir[PDX(la)];
-    // (2) check if entry is not present
-    if( (*pdep & PTE_P ) == NULL ) {
-        // (3) check if creating is needed, then alloc page for page table
-        struct Page* page;
-        if(!create || (page=alloc_page())==NULL ) return NULL;
-        // (4) set page reference
-        set_page_ref(page,1);
-        // (5) get physical address of page
-        uintptr_t pa=page2pa(page);
-        // (6) clear page content using memset
-        memset(KADDR(pa),0,PGSIZE);
-        // (7) set page directory entry's permission
-        *pdep= (pa&~0x0FFF) | PTE_P | PTE_W | PTE_U;
-    }
-    // (8) return page table entry
-    return &((pte_t*)KADDR(PDE_ADDR(*pdep)))[PTX(la)];
-}
-```
-
-问题1：请描述页目录项（Page Directory Entry）和页表项（Page Table Entry）中每个组成部分的含义以及对ucore而言的潜在用处。 
-
-请见准备知识部分的“Ucore建立段/页表”部分
-
-问题2：如果ucore执行过程中访问内存，出现了页访问异常，请问硬件要做哪些事情？ 
-
-见lab3内容
-
-
-
-
-
-
-
-
-
