@@ -1,6 +1,10 @@
-# README
+# 二进制学习记录
 
-此处主要记录自己二进制基础的学习：
+## 这是什么
+
+此文档主要记录自己在二进制方向的学习，包括基础知识的学习、CTF题目的练习和部分开发基础的积累。
+
+## 学习进度
 
 <details>
     <summary>Week 1-2</summary>
@@ -13,14 +17,12 @@
     <p>
         	结题测试：https://github.com/Theffth/skr_university/tree/master/Simple_SGI_STL/finial_test
     </p>
-    <p>
-        	总结笔记：//TODO
-    </p>
 </details>
+
 <details>
     <summary>Week 3-9</summary>
     <p>
-        学习编译原理，主要参考Stanford的课程cs143和哈工大的教学视频，完成相应lab
+        学习编译原理，主要参考Stanford的课程cs143和哈工大的教学视频，完成相应lab。
     </p>
     <p>
         cool compiler lab代码：https://github.com/Theffth/skr_university/tree/master/compiler
@@ -29,6 +31,7 @@
         总结笔记：https://www.cnblogs.com/Theffth-blog/p/13338386.html
     </p>
 </details>
+
 <details>
     <summary>Week 10-11</summary>
     <p>
@@ -44,6 +47,38 @@
         总结笔记：https://github.com/Theffth/skr_university/blob/master/csapp%20lab/CSAPP%20LAB.md
     </p>
 </details>
+
+<details>
+    <summary>Week 12-20
+    </summary>
+    <p>
+        这段时间主要根据清华大学操作系统课程，完成uCore实验。
+        > 链接地址为: https://www.xuetangx.com/course/THU08091000267/4231154
+    </p>
+    <p>
+        目前进度: 完成Lab0-Lab5的理论和实验部分。
+    </p>
+    <p>
+        总结笔记: https://github.com/Theffth/skr_university/tree/master/uCore
+    </p>
+
+> 从这里开始，主要以日报的形式记录自己每日的学习内容。
+
+<details>
+    <summary>2020.10.20</summary>
+    <p>
+    </p>
+</details>
+
+
+
+
+
+
+
+
+
+
 
 
 
