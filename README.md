@@ -18,6 +18,7 @@
     	结题测试：https://github.com/Theffth/skr_university/tree/master/Simple_SGI_STL/finial_test
 </p>
 </details>
+
 <details>
     <summary>Week 3-9</summary>
     <p>
@@ -31,6 +32,8 @@
 	<p>
     	总结笔记：https://theffth.github.io/2020/07/29/Compiler-CS143/
 	</p>
+</details>
+
 
 <details>
     <summary>Week 10-11</summary>
@@ -70,7 +73,9 @@
 
 <details>
     <summary>2020.10.23</summary>
+    <p>
         - [x] 大致配置好了新博客: https://theffth.github.io/
+    </p>
 </details>
 
 
