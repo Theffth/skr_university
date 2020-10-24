@@ -74,15 +74,9 @@
 <details>
     <summary>2020.10.23</summary>
     <p>
-        - [x] 大致配置好了新博客: https://theffth.github.io/
+        1. 大致配置完成新的博客，地址：https://theffth.github.io/
     </p>
 </details>
-
-
-
-
-
-
 
 
 
