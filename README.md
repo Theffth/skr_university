@@ -8,6 +8,7 @@
 
 <details>
     <summary>Week 1-2</summary>
+    <p></p>
 <p>
     	实现简单的SGI STL，完成了分配器、迭代器、萃取机制以及vector容器
 </p>
@@ -21,8 +22,7 @@
 
 <details>
     <summary>Week 3-9</summary>
-    <p>
-    </p>
+    <p></p>
 	<p>
    		学习编译原理，主要参考Stanford的课程cs143和哈工大的教学视频，完成相应lab。
 	</p>
@@ -73,10 +73,114 @@
 
 <details>
     <summary>2020.10.23</summary>
+    <p></p>
     <p>
-        1. 大致配置完成新的博客，地址：https://theffth.github.io/
+        大致配置完成新的博客，地址：https://theffth.github.io/
     </p>
 </details>
 
+<details>
+    <summary>2020.10.24</summary>
+    <p></p>
+    <p>
+        1. pwnable.tw: start + orw
+    </p>
+    <p>
+        2. leetcode: 977 1365
+    </p>
+    <p>
+        https://theffth.github.io/2020/11/01/leetcode-977%201365/
+    </p>
+</details>
 
+<details>
+    <summary>2020.10.25</summary>
+    <p>
+        上下午体测: 立定跳近(跪倒)、仰卧躺倒、坐位体后屈、50米走、800米爬、引体上吊(×)
+        </p>
+<p>
+    晚上夜游西湖，景不错、腿已断
+</p>
+</details>
+
+<details>
+    <summary>2020.10.26</summary>
+    <p></p><p>
+    计算机安全导论：深度实践 (课程资料，第一部分是简单二进制攻击实践)
+</p>
+<p>
+    查漏补缺一些基础知识，阿巴阿巴...
+</p>
+<p>
+    1. Set-Uid特权程序原理
+</p>
+<p>
+    2. 利用环境变量实现攻击
+</p>
+<p>
+    => 通过动态链接器的攻击: LD_PRELOAD 和 LD_LIBRARY_PATH
+</p>
+<p>
+    => 利用外部程序进行攻击: PATH 环境变量
+</p>
+<p>
+    3. 竞态条件漏洞: 原理及实践
+</p>
+<p>
+    => 脏牛攻击: MAP_SHARED & MAP_PRIVATE 和写时拷贝
+</p>
+</details>
+
+<details>
+    <summary>2020.10.27</summary>
+    <p></p>
+    <p>
+        ByteCTF: https://github.com/hebtuerror404/CTF_competition_warehouse_2020_Second/tree/master/2020_ByteCTF/PWN 
+    </p>
+    <p>
+        1. easyheap: 找漏洞点利用Off By Null + 构造Double Free
+    </p>
+    <p>
+        2. gun: 找漏洞点利用Use After Free + 构造Chunk Overlapping
+        + 学习: 绕过高版本中Tcache Check & ORW　getshell
+    </p>
+    <p>
+        3. leak & ohmyjson & pwnandroid: Go PWN & Android PWN 
+    </p>
+    <p>
+        复现笔记: 马上补上
+    </p>
+</details>
+
+<details>
+    <summary>2020.10.28</summary>
+    <p></p>
+    <p>
+        普林斯顿算法课: 
+    </p>
+    <p>
+        第一周中英对照链接: https://www.bilibili.com/video/BV1Fx411C73u?from=search&seid=17597613833573062644
+    </p>
+    <p>
+        刚开始学
+    </p>
+</details>
+
+<details>
+    <summary>2020.10.29</summary>
+    <p>
+        去买了新车车！
+    </p>
+</details>
+
+<details>
+    <summary>2020.10.30-2020.10.31</summary>
+	<p></p>
+    <p>
+        被迫接活，帮做班级任务，持续性抑郁，间接性暴走，赶了两天PPT，好在已做完，爷又活了！
+    </p>
+    <p>
+        QwQ X-NUCA好难 ParseC PWN + VM PWN + Cpp PWN + V8 PWN , 希望自己能复现一两道出来呜呜
+    </p>
+</details>
 
