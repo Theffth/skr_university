@@ -68,28 +68,38 @@
 > 从这里开始，主要以日报的形式记录自己每日的学习内容。
 
 <details>
-    <summary>2020.10.23 : 配置新博客</summary>
+    <summary>2020.10.23</summary>
+
 - [x] 配置完成[新的博客](https://theffth.github.io/)
 
 </details>
 
 <details>
-    <summary>2020.10.24 : [pwnable + leetcode](https://theffth.github.io/2020/11/01/leetcode-977%201365/) </summary>
+    <summary>2020.10.24</summary>
+
 
 - [x] pwnable.tw : start + orw
+
 - [x] leetcode : 977 1365
+
+  > [writeup](https://theffth.github.io/2020/11/01/leetcode-977%201365/) 
 
 </details>
 
 <details>
-    <summary>2020.10.25 : 体测</summary>
+    <summary>2020.10.25</summary>
+
 
 - [x] 体测：立定跳近(跪倒)、仰卧躺倒、坐位体后屈、50米走、800米爬、引体上吊(×)
 
 </details>
 
 <details>
-    <summary>2020.10.26 : 计算机安全导论：深度实践 (课程资料，简单二进制攻击实践)</summary>
+    <summary>2020.10.26</summary>
+    <p></p>
+    <p>
+        计算机安全导论：深度实践 (课程资料，简单二进制攻击实践)
+    </p>
 
 - [x] Set-Uid特权程序原理
 
