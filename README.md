@@ -33,6 +33,11 @@
     	总结笔记：https://theffth.github.io/2020/07/29/Compiler-CS143/
 	</p>
 </details>
+<<<<<<< HEAD
+=======
+
+
+>>>>>>> 14df8340c9218906ca04bb34d3a5ed779b0f13c8
 <details>
     <summary>Week 10-11</summary>
     <p>
@@ -101,12 +106,22 @@
     晚上夜游西湖，景不错、腿已废
 </p>
 </details>
+<<<<<<< HEAD
+=======
+
+>>>>>>> 14df8340c9218906ca04bb34d3a5ed779b0f13c8
 <details>
     <summary>2020.10.26</summary>
     <p></p><p>
     计算机安全导论：深度实践 (课程资料，第一部分是简单二进制攻击实践)
 </p>
 <p>
+<<<<<<< HEAD
+=======
+    查漏补缺一些基础知识，阿巴阿巴...
+</p>
+<p>
+>>>>>>> 14df8340c9218906ca04bb34d3a5ed779b0f13c8
     1. Set-Uid特权程序原理
 </p>
 <p>
@@ -137,7 +152,11 @@
     </p>
     <p>
         2. gun: 找漏洞点利用Use After Free + 构造Chunk Overlapping
+<<<<<<< HEAD
         + 学习: 绕过高版本中Tcache Check & ORW getshell
+=======
+        + 学习: 绕过高版本中Tcache Check & ORW　getshell
+>>>>>>> 14df8340c9218906ca04bb34d3a5ed779b0f13c8
     </p>
     <p>
         3. leak & ohmyjson & pwnandroid: Go PWN & Android PWN 
@@ -156,6 +175,7 @@
     <p>
         第一周中英对照链接: https://www.bilibili.com/video/BV1Fx411C73u?from=search&seid=17597613833573062644
     </p>
+<<<<<<< HEAD
 </details>
 
 
@@ -171,10 +191,15 @@
 	<p></p>
     <p>
         帮做班级任务（先班评比），赶了两天PPT
+=======
+    <p>
+        刚开始学
+>>>>>>> 14df8340c9218906ca04bb34d3a5ed779b0f13c8
     </p>
 </details>
 
 <details>
+<<<<<<< HEAD
     <summary>2020.10.31</summary>
     <p></p>
     <p>
@@ -196,10 +221,17 @@
     </p>
     <p>
         完成 4800+3000 字的思想汇报和自传，还差手抄，以及其他杂七杂八的ddl
+=======
+    <summary>2020.10.29</summary>
+    <p></p>
+    <p>
+        去买了新车车！
+>>>>>>> 14df8340c9218906ca04bb34d3a5ed779b0f13c8
     </p>
 </details>
 
 <details>
+<<<<<<< HEAD
     <summary>2020.11.08</summary>
     <p></p>
     <p>
@@ -212,3 +244,15 @@
 
 
 
+=======
+    <summary>2020.10.30 - 2020.10.31</summary>
+	<p></p>
+    <p>
+        被迫接活，帮做班级任务，持续性抑郁，间接性暴走，赶了两天PPT，好在已做完，爷又活了！
+    </p>
+    <p>
+        QwQ X-NUCA好难 ParseC PWN + VM PWN + Cpp PWN + V8 PWN , 希望自己能复现一两道出来呜呜
+    </p>
+</details>
+
+>>>>>>> 14df8340c9218906ca04bb34d3a5ed779b0f13c8
