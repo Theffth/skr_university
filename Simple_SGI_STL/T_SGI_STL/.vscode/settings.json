@@ -1,0 +1,23 @@
+{
+    "files.associations": {
+        "xtr1common": "cpp",
+        "initializer_list": "cpp",
+        "type_traits": "cpp",
+        "exception": "cpp",
+        "concepts": "cpp",
+        "ios": "cpp",
+        "istream": "cpp",
+        "memory": "cpp",
+        "ostream": "cpp",
+        "streambuf": "cpp",
+        "tuple": "cpp",
+        "utility": "cpp",
+        "xiosbase": "cpp",
+        "xmemory": "cpp",
+        "xstring": "cpp",
+        "xutility": "cpp",
+        "limits": "cpp",
+        "xlocale": "cpp",
+        "xfacet": "cpp"
+    }
+}
